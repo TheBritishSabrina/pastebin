@@ -27,10 +27,36 @@ const client = new Client(dbConfig);
 client.connect();
 
 app.get("/", async (req, res) => {
-  const dbres = await client.query('select * from categories');
-  res.json(dbres.rows);
+  const posts = await client.query('SELECT * FROM posts');
+  res.status(200).json({
+    status: "success",
+    data: {
+      posts,
+    },
+  });
 });
 
+app.post("/", async (req, res) => {
+  // add title, text to new entry
+  const { title, text } = req.body;
+
+  if (typeof text === "string") {
+    const createdPost = await client.query("INSERT INTO posts (title, text) VALUES ($1, $2)", [title, text]);
+    res.status(201).json({
+      status: "success",
+      data: {
+        createdPost,
+      },
+    });
+  } else {
+    res.status(400).json({
+      status: "fail",
+      data: {
+        text: "A string value for text is required in your JSON body",
+      },
+    });
+  }
+})
 
 //Start the server on the given port
 const port = process.env.PORT;
